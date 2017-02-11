@@ -1,5 +1,7 @@
 #lang sicp
 
+(#%provide prime?)
+
 (define (timed-prime-test-in-range a b)
   (cond ((> a b) #f)
         (else  (if (odd? a)
