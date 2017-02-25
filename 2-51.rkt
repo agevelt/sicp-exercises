@@ -1,14 +1,13 @@
 #lang sicp
 (#%require sicp-pict)
 
-; transform-painter works a little differently in sicp-pict package than in the
-; SICP book. The difference being that in sicp-pict, a transform-painter returns
-; a function (painter -> painter). This is more general, since it allows
-; transformations to be described separately from the application of said
-; transformation to a painter. In the book, painter is a parameter of
-; transform-painter, which means we can't reuse the given transformation for
-; different painters without copy-pasting the definition of the transformation
-; and substituting the painter argument.
+; transform-painter works a little differently in the sicp-pict package than in
+; the SICP book. In the book, transform-painter takes a painter as an argument,
+; which means we can't reuse the resulting transformation for different painters
+; without copy-pasting the code and substituting the painter argument. In the
+; sicp-pict package, transform-painter returns a function (painter -> painter).
+; This is more general, since it allows transformations to be described
+; separately from the application of that transformation to a painter.
 
 (define (below2 painter1 painter2)
   (lambda (frame)
