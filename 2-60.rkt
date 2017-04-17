@@ -10,7 +10,7 @@
 
 
 ;; When we allow duplicates, adjoin-set does not need to check if an element is
-;; present in the set. The runtime decreases from O(n) to O(1).
+;; present in the set. The number of steps decreases from O(n) to O(1).
 
 ;; (define (adjoin-set x ys)
 ;;   (if (element-of-set? x ys)
@@ -21,7 +21,7 @@
 
 
 ;; The union-set definition does not change, since it relies on adjoin-set to do
-;; the dirty work. The runtime decreases from O(n^2) to O(n).
+;; the dirty work. The number of steps decreases from O(n*m) to O(n).
 
 ;; (define (union-set set1 set2)
 ;;   (cond ((null? set1) set2)
@@ -35,7 +35,8 @@
 
 ;; The regular intersection-set definition assumes that both sets contain at
 ;; most one of each element. If an element in set1 matches against an element in
-;; set2, then we remove the element from set2 before the next recursion. The runtime is the same: O(n*m).
+;; set2, then we remove the element from set2 before the next recursion. The
+;; number of steps is the same: O(n*m).
 
 ;; (define (intersection-set set1 set2)
 ;;   (cond ((or (null? set1) (null? set2)) '())
