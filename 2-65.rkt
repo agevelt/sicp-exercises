@@ -1,4 +1,5 @@
 #lang racket
+(require racket/pretty)
 
 (define (entry tree)
   (car tree))
@@ -70,22 +71,45 @@
                         (make-tree 11 '() '()))))
 
 (define tree2
-  (make-tree 3
-             (make-tree 1 '() '())
-             (make-tree 7
+  (make-tree 4
+             (make-tree 0 '() '())
+             (make-tree 8
                         (make-tree 5 '() '())
-                        (make-tree 9
-                                   '()
-                                   (make-tree 11 '() '())))))
+                        (make-tree 14
+                                   (make-tree 11 '() '())
+                                   (make-tree 18 '() '())))))
 
-(require racket/pretty)
 (pretty-print (union-set tree1 tree2))
-;; '(5
-;;   (1 ()
-;;      (3 ()
+;; ﻿>
+;; '(7
+;;   (3 (0 ()
+;;         (1 () ()))
+;;      (4 ()
+;;         (5 () ())))
+;;   (11 (8 ()
+;;          (9 () ()))
+;;       (14 ()
+;;           (18 () ()))))
+
+(define (intersection-list list1 list2)
+  (if (or (null? list1) (null? list2))
+      '()
+      (let ((x1 (car list1)) (x2 (car list2)))
+        (cond ((= x1 x2)
+               (cons x1 (intersection-list (cdr list1) (cdr list2))))
+              ((< x1 x2)
+               (intersection-list (cdr list1) list2))
+              ((> x1 x2)
+               (intersection-list list1 (cdr list2)))))))
+
+(define (intersection-set tree1 tree2)
+  (let ((list1 (tree->list tree1))
+        (list2 (tree->list tree2)))
+    (let ((ordered-list (intersection-list list1 list2)))
+      (list->tree ordered-list))))
+
+(pretty-print (intersection-set tree1 tree2))
+;; ﻿>
+;; '(5 ()
+;;     (11 ()
 ;;         ()))
-;;   (9
-;;    (7 ()
-;;       ())
-;;    (11 ()
-;;        ())))
