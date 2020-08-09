@@ -45,25 +45,25 @@
         (else (list m1 '* m2))))
 
 (define (sum? x)
-  (and (pair? x) (eq? (lowest-prec-sign x) '+)))
+  (and (pair? x) (eq? (sign x) '+)))
 
-(define (addend s) (lowest-prec-arg1 s))
+(define (addend s) (left-arg s))
 
-(define (augend s) (lowest-prec-arg2 s))
+(define (augend s) (right-arg s))
 
 (define (product? x)
-  (and (pair? x) (eq? (lowest-prec-sign x) '*)))
+  (and (pair? x) (eq? (sign x) '*)))
 
-(define (multiplier p) (lowest-prec-arg1 p))
+(define (multiplier p) (left-arg p))
 
-(define (multiplicand p) (lowest-prec-arg2 p))
+(define (multiplicand p) (right-arg p))
 
 (define (exponentiation? x)
-  (and (pair? x) (eq? (lowest-prec-sign x) '**)))
+  (and (pair? x) (eq? (sign x) '**)))
 
-(define (base e) (lowest-prec-arg1 e))
+(define (base e) (left-arg e))
 
-(define (exponent e) (lowest-prec-arg2 e))
+(define (exponent e) (right-arg e))
 
 (define (make-exponentiation b e)
   (cond ((=number? e 0) 1)
@@ -78,24 +78,28 @@
         ((and (eq? current '*) (eq? next '**)) #t)
         (else #f)))
 
-(define (lowest-prec-sign expr)
-  (cond ((or (pair? (car expr)) (pair? (caddr expr))) (cadr expr))
-        ((eq? (cdddr expr) '()) (cadr expr))
-        ((lowest-precedence? (cadr expr) (cadddr expr)) (cadr expr))
-        (else (lowest-prec-sign (cddr expr)))))
+(define (parenthesize-expr expr left-arg)
+  (if (or (pair? (car expr))
+          (pair? (caddr expr))
+          (eq? (cdddr expr) '())
+          (lowest-precedence? (cadr expr) (cadddr expr)))
+      (parenthesize-left-arg expr left-arg)
+      (parenthesize-expr (cddr expr) (append left-arg (list (car expr) (cadr expr))))))
 
-(define (lowest-prec-arg1 expr)
-  (cond ((or (pair? (car expr)) (pair? (caddr expr))) (car expr))
-        ((eq? (cdddr expr) '()) (car expr))
-        ((lowest-precedence? (cadr expr) (cadddr expr)) (car expr))
-        (else (list (car expr) (cadr expr) (lowest-prec-arg1 (cddr expr))))))
+(define (parenthesize-left-arg expr arg1)
+  (cond ((eq? arg1 '()) expr)
+        (else (cons (append arg1 (list (car expr))) (cdr expr)))))
 
-(define (lowest-prec-arg2 expr)
-  (cond ((pair? (caddr expr)) (caddr expr))
-        ((pair? (car expr)) (cddr expr))
-        ((eq? (cdddr expr) '()) (caddr expr))
-        ((lowest-precedence? (cadr expr) (cadddr expr)) (cddr expr))
-        (else (lowest-prec-arg2 (cddr expr)))))
+(define (sign expr)
+  (cadr (parenthesize-expr expr '())))
+
+(define (left-arg expr)
+  (car (parenthesize-expr expr '())))
+
+(define (right-arg expr)
+  (let ((expr-p (parenthesize-expr expr '())))
+    (cond ((eq? (cdddr expr-p) '()) (caddr expr-p))
+          (else (cddr expr-p)))))
 
 (deriv '(x + 3) 'x)
 
@@ -105,8 +109,6 @@
 
 ;;a. test
 (deriv '(x + (3 * (x + (y + 2)))) 'x)
-
-
 
 ;;b. test
 (deriv '(x + 3 * (x + y + 2)) 'x)
