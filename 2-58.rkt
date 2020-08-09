@@ -72,23 +72,26 @@
         (else (list b '** e))))
 
 
-(define (lowest-precedence? current next)
-  (cond ((and (eq? current '+) (eq? next '*)) #t)
-        ((and (eq? current '+) (eq? next '**)) #t)
-        ((and (eq? current '*) (eq? next '**)) #t)
-        (else #f)))
 
 (define (parenthesize-expr expr left-arg)
+  
+  (define (lowest-precedence? current next)
+    (cond ((and (eq? current '+) (eq? next '*)) #t)
+          ((and (eq? current '+) (eq? next '**)) #t)
+          ((and (eq? current '*) (eq? next '**)) #t)
+          (else #f)))
+  
+  (define (parenthesize-left-arg expr arg1)
+    (cond ((null? arg1) expr)
+          (else (cons (append arg1 (list (car expr))) (cdr expr)))))
+  
   (if (or (pair? (car expr))
           (pair? (caddr expr))
-          (eq? (cdddr expr) '())
+          (null? (cdddr expr))
           (lowest-precedence? (cadr expr) (cadddr expr)))
       (parenthesize-left-arg expr left-arg)
       (parenthesize-expr (cddr expr) (append left-arg (list (car expr) (cadr expr))))))
 
-(define (parenthesize-left-arg expr arg1)
-  (cond ((eq? arg1 '()) expr)
-        (else (cons (append arg1 (list (car expr))) (cdr expr)))))
 
 (define (sign expr)
   (cadr (parenthesize-expr expr '())))
@@ -98,7 +101,7 @@
 
 (define (right-arg expr)
   (let ((expr-p (parenthesize-expr expr '())))
-    (cond ((eq? (cdddr expr-p) '()) (caddr expr-p))
+    (cond ((null? (cdddr expr-p)) (caddr expr-p))
           (else (cddr expr-p)))))
 
 (deriv '(x + 3) 'x)
@@ -109,6 +112,8 @@
 
 ;;a. test
 (deriv '(x + (3 * (x + (y + 2)))) 'x)
+
+(deriv '(x ** (3 * (x + (y + 2)))) 'x)
 
 ;;b. test
 (deriv '(x + 3 * (x + y + 2)) 'x)
