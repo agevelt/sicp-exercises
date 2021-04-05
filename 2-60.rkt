@@ -33,24 +33,28 @@
                           (union-set (cdr set1) set2)))))
 
 
-;; The regular intersection-set definition assumes that both sets contain at
-;; most one of each element. If an element in set1 matches against an element in
-;; set2, then we remove the element from set2 before the next recursion. The
-;; number of steps is the same: O(n*m).
+;; The intersection-set definition does not change if we don't care about limiting
+;; the amount of duplicates in the set.
 
-;; (define (intersection-set set1 set2)
-;;   (cond ((or (null? set1) (null? set2)) '())
-;;         ((element-of-set? (car set1) set2)
-;;          (cons (car set1)
-;;                (intersection-set (cdr set1) set2)))
-;;         (else (intersection-set (cdr set1) set2))))
 (define (intersection-set set1 set2)
   (cond ((or (null? set1) (null? set2)) '())
         ((element-of-set? (car set1) set2)
          (cons (car set1)
-               (intersection-set (cdr set1)
-                                 (remove-first-elem-in-set (car set1) set2))))
+               (intersection-set (cdr set1) set2)))
         (else (intersection-set (cdr set1) set2))))
+
+
+;; If we care about the intersection-set having the 'right' number of elements,
+;; then we can remove the element from set2 before we recurse. The number of steps
+;; then increases from O(n*m) to O(n*m*m).
+
+(define (intersection-set2 set1 set2)
+  (cond ((or (null? set1) (null? set2)) '())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1)
+               (intersection-set2 (cdr set1)
+                                 (remove-first-elem-in-set (car set1) set2))))
+        (else (intersection-set2 (cdr set1) set2))))
 
 (define (remove-first-elem-in-set x ys)
   (cond ((null? ys) '())
@@ -58,12 +62,10 @@
         (else (cons (car ys)
                     (remove-first-elem-in-set x (cdr ys))))))
 
-;; In practice, by allowing duplicates we make insertion operations constant.
-;; This comes at the cost of having larger sets when doing comparison
-;; operations. Since we don't remove duplicates during each operation, we will
-;; have a monotonically increasing set size for every set-operation we perform,
-;; with the exception of intersection-set, which still functions as advertised.
+;; ------
+;; By allowing duplicates, we make the insertion operations faster. This
+;; comes at the cost of having larger sets when doing comparison operations.
 
-;; This representation might be useful in cases where you add to, and take the
-;; union of sets much more often than you do intersection or check if an element
-;; exists in the set.
+;; This representation might be useful in cases where you add to and take the
+;; union of sets much more often than you take the intersection or check if an
+;; element exists in the set.
