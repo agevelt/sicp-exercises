@@ -1,5 +1,6 @@
 #lang sicp
 
+
 (define (make-leaf symbol weight)
   (list 'leaf symbol weight))
 
@@ -32,6 +33,7 @@
 
 (define (right-branch tree) (cadr tree))
 
+
 (define (decode bits tree)
   (define (decode-1 bits current-branch)
     (if (null? bits)
@@ -50,14 +52,36 @@
         (else (error "bad bit in choose-branch: " bit))))
 
 
-(define (sample-tree)
-  (make-code-tree (make-leaf 'A 4)
-                  (make-code-tree
-                   (make-leaf 'B 2)
-                   (make-code-tree (make-leaf 'D 1)
-                                   (make-leaf 'C 1)))))
+(define (adjoin-set x set)
+  (cond ((null? set) (list x))
+        ((< (weight x) (weight (car set))) (cons x set))
+        (else (cons (car set)
+                    (adjoin-set x (cdr set))))))
 
-(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
+(define (make-leaf-set pairs)
+  (if (null? pairs)
+      '()
+      (let ((pair (car pairs)))
+        (adjoin-set (make-leaf (car pair) ;symbol
+                               (cadr pair)) ;frequency
+                    (make-leaf-set (cdr pairs))))))
 
-;; ﻿> (decode sample-message (sample-tree))
-;; '(A D A B B C A)
+
+(define (successive-merge leaf-set)
+  (cond ((< (length leaf-set) 2) leaf-set)
+        ((= (length leaf-set) 2) (adjoin-set (car leaf-set) (cdr leaf-set)))      
+        (else (successive-merge (adjoin-set (make-code-tree (car leaf-set) (cadr leaf-set))
+                                            (cddr leaf-set))))))
+    
+
+(define (generate-huffman-tree pairs)
+  (successive-merge (make-leaf-set pairs)))
+
+
+(define (test1) '((A 4) (B 2) (C 1) (D 1)))
+
+(make-leaf-set (test1))
+; > ((leaf D 1) (leaf C 1) (leaf B 2) (leaf A 4))
+
+(generate-huffman-tree (test1))
+; > (((leaf B 2) ((leaf D 1) (leaf C 1) (D C) 2) (B D C) 4) (leaf A 4))

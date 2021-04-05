@@ -1,5 +1,6 @@
 #lang sicp
 
+
 (define (make-leaf symbol weight)
   (list 'leaf symbol weight))
 
@@ -32,22 +33,33 @@
 
 (define (right-branch tree) (cadr tree))
 
-(define (decode bits tree)
-  (define (decode-1 bits current-branch)
-    (if (null? bits)
-        '()
-        (let ((next-branch
-               (choose-branch (car bits) current-branch)))
-          (if (leaf? next-branch)
-              (cons (symbol-leaf next-branch)
-                    (decode-1 (cdr bits) tree))
-              (decode-1 (cdr bits) next-branch)))))
-  (decode-1 bits tree))
+
+(define (encode message tree)
+  (if (null? message)
+      '()
+      (append (encode-symbol (car message) tree)
+              (encode (cdr message) tree))))
 
 (define (choose-branch bit branch)
   (cond ((= bit 0) (left-branch branch))
         ((= bit 1) (right-branch branch))
         (else (error "bad bit in choose-branch: " bit))))
+
+
+(define (contains? s symbols)
+  (cond ((null? symbols) false)
+        ((equal? s (car symbols)) true)
+        (else (contains? s (cdr symbols)))))    
+
+(define (encode-symbol symbol tree)
+  (cond ((leaf? tree) nil)
+        ((contains? symbol (symbols (left-branch tree)))
+         (cons 0 (encode-symbol symbol (left-branch tree))))
+        ((contains? symbol (symbols (right-branch tree)))
+         (cons 1 (encode-symbol symbol (right-branch tree))))
+        (else (error "symbol does not exist in tree: " symbol tree))))
+
+
 
 
 (define (sample-tree)
@@ -57,7 +69,12 @@
                    (make-code-tree (make-leaf 'D 1)
                                    (make-leaf 'C 1)))))
 
-(define sample-message '(0 1 1 0 0 1 0 1 0 1 1 1 0))
 
-;; ﻿> (decode sample-message (sample-tree))
-;; '(A D A B B C A)
+(encode-symbol 'A (sample-tree))
+;> (0)
+(encode-symbol 'B (sample-tree))
+;> (1 0)
+(encode-symbol 'C (sample-tree))
+;> (1 1 1)
+(encode-symbol 'D (sample-tree))
+;> (1 1 0)
